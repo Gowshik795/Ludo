@@ -1,0 +1,33 @@
+# OPTION B - no Docker Hub account/secrets needed.
+# To use: move this file to .github/workflows/ (and delete docker-publish.yml so only one runs).
+# Image will be: ghcr.io/<your-github-username>/<repo-name>:latest
+name: Docker ludo Image (GHCR)
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  publish_images:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        run: |
+          IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}:latest
+          docker build . -t "$IMAGE"
+          docker push "$IMAGE"
