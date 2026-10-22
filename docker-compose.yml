@@ -1,0 +1,17 @@
+services:
+  # Default: play in your browser at http://localhost:6080/vnc.html?autoconnect=true&resize=scale
+  ludo:
+    build: .
+    ports:
+      - "6080:6080"
+
+  # Optional: draw the window directly on your desktop (Linux/X11).
+  # Run:  xhost +local:docker && docker compose --profile x11 up ludo-x11
+  ludo-x11:
+    build: .
+    profiles: ["x11"]
+    environment:
+      - MODE=x11
+      - DISPLAY=${DISPLAY}
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
