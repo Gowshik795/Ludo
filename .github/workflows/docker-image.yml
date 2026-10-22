@@ -3,7 +3,7 @@ name: Docker ludo Image
 on:
   push:
     branches: ["main"]
-  workflow_dispatch:   # lets you press "Run workflow" in the Actions tab
+  
 
 jobs:
   publish_images:
