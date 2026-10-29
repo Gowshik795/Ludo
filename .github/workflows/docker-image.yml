@@ -43,5 +43,5 @@ jobs:
             sudo docker pull gowshik79/ludo:latest
             sudo docker stop ludo-app || true
             sudo docker rm ludo-app || true
-            sudo docker run -d --name ludo-app --restart always -p 80:3000 gowshik79/ludo:latest
+            sudo docker run -d --name ludo-app --restart always -p 80:6080 gowshik79/ludo:latest
             sudo docker image prune -f
