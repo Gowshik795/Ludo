@@ -18,6 +18,34 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME}}
           password: ${{ secrets.DOCKER_PASS}}
 
+deploy-to-ec2:
+    name: Deploy to EC2
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH and Redeploy Container
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # Pull the fresh image from Docker Hub
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/ludo:latest
+
+            # Stop and remove existing container if running
+            docker stop ludo-app || true
+            docker rm ludo-app || true
+
+            # Run new container (change 80:80 to 80:YOUR_INTERNAL_PORT if app runs on 3000/5000)
+            docker run -d \
+              --name ludo-app \
+              --restart always \
+              -p 80:80 \
+              ${{ secrets.DOCKERHUB_USERNAME }}/ludo:latest
+
+            # Clean up old unused images to save disk space on EC2
+            docker image prune -f
       - name: Build Docker image
         run: docker build . -t gowshik79/ludo:latest
 
