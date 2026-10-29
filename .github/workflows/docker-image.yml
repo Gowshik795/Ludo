@@ -3,24 +3,34 @@ name: Docker ludo Image
 on:
   push:
     branches: ["main"]
-  
+
 jobs:
   publish_images:
+    name: Build & Push Image to Docker Hub
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Login to Docker Hub
+      - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKER_USERNAME}}
-          password: ${{ secrets.DOCKER_PASS}}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-deploy-to-ec2:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/ludo:latest
+
+  deploy-to-ec2:
     name: Deploy to EC2
-    needs: build-and-push
+    needs: publish_images
     runs-on: ubuntu-latest
     steps:
       - name: SSH and Redeploy Container
@@ -30,24 +40,8 @@ deploy-to-ec2:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # Pull the fresh image from Docker Hub
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/ludo:latest
-
-            # Stop and remove existing container if running
             docker stop ludo-app || true
             docker rm ludo-app || true
-
-            # Run new container (change 80:80 to 80:YOUR_INTERNAL_PORT if app runs on 3000/5000)
-            docker run -d \
-              --name ludo-app \
-              --restart always \
-              -p 80:80 \
-              ${{ secrets.DOCKERHUB_USERNAME }}/ludo:latest
-
-            
+            docker run -d --name ludo-app --restart always -p 80:3000 ${{ secrets.DOCKERHUB_USERNAME }}/ludo:latest
             docker image prune -f
-      - name: Build Docker image
-        run: docker build . -t gowshik79/ludo:latest
-
-      - name: Push Docker image
-        run: docker push gowshik79/ludo:latest
