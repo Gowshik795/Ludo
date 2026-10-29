@@ -15,7 +15,7 @@ jobs:
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
+          username: gowshik79
           password: ${{ secrets.DOCKER_PASS }}
 
       - name: Set up Docker Buildx
@@ -26,7 +26,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/ludo:latest
+          tags: gowshik79/ludo:latest
 
   deploy-to-ec2:
     name: Deploy to EC2
@@ -40,8 +40,8 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/ludo:latest
-            docker stop ludo-app || true
-            docker rm ludo-app || true
-            docker run -d --name ludo-app --restart always -p 80:3000 ${{ secrets.DOCKERHUB_USERNAME }}/ludo:latest
-            docker image prune -f
+            sudo docker pull gowshik79/ludo:latest
+            sudo docker stop ludo-app || true
+            sudo docker rm ludo-app || true
+            sudo docker run -d --name ludo-app --restart always -p 80:3000 gowshik79/ludo:latest
+            sudo docker image prune -f
